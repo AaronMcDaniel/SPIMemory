@@ -80,12 +80,14 @@
   #if !defined (OVERWRITE)
    _beginSPI(READDATA);
    for (uint32_t i = 0; i < size; i++) {if (_nextByte(READ) != 0x00) {
-       CHIP_DESELECT;
+       //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins;
        _troubleshoot(PREVWRITTEN);
        return false;
      }
    }
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
   #endif
    return true;
  }
@@ -133,9 +135,9 @@
      #ifdef SPI_HAS_TRANSACTION
        SPI.beginTransaction(_settings);
      #else
-       SPI.setClockDivider(SPI_CLOCK_DIV4);
+       /*SPI.setClockDivider(SPI_CLOCK_DIV4);
        SPI.setDataMode(SPI_MODE0);
-       SPI.setBitOrder(MSBFIRST);
+       SPI.setBitOrder(MSBFIRST);*/
      #endif
    #endif
    SPIBusState = true;
@@ -147,7 +149,7 @@
    if (!SPIBusState) {
      _startSPIBus();
    }
-   CHIP_SELECT
+   //CHIP_SELECT// this should not be writing to pins
    switch (opcode) {
      case READDATA:
      _nextByte(WRITE, opcode);
@@ -197,7 +199,7 @@
  #if defined (ARDUINO_ARCH_SAMD)
    return _spi->transfer16(data);
  #else
-   return SPI.transfer16(data);
+   return SPIMem.FprimeTransfer16(data);
  #endif
  }
 
@@ -215,7 +217,7 @@
          _spi->transfer(&data_buffer[0], size);
        #endif
      #elif defined (ARDUINO_ARCH_AVR)
-       SPI.transfer(&(*data_buffer), size);
+       SPIMem.FprimeTransfer(&(*data_buffer), size);
      #else
        for (uint16_t i = 0; i < size; i++) {
          *_dataAddr = xfer(NULLBYTE);
@@ -234,7 +236,7 @@
          _spi->transfer(&data_buffer[0], size);
        #endif
      #elif defined (ARDUINO_ARCH_AVR)
-       SPI.transfer(&(*data_buffer), size);
+       SPIMem.FprimeTransfer(&(*data_buffer), size);
      #else
        for (uint16_t i = 0; i < size; i++) {
          xfer(*_dataAddr);
@@ -247,7 +249,8 @@
 
  //Stops all operations. Should be called after all the required data is read/written from repeated _nextByte() calls
  void SPIFram::_endSPI(void) {
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
  #ifdef SPI_HAS_TRANSACTION
    #if defined (ARDUINO_ARCH_SAMD)
@@ -269,7 +272,8 @@
  uint8_t SPIFram::_readStat1(void) {
    _beginSPI(READSTAT1);
    stat1 = _nextByte(READ);
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
    return stat1;
  }
 
@@ -287,7 +291,8 @@
  //Enables writing to chip by setting the WRITEENABLE bit
  bool SPIFram::_writeEnable(bool _troubleshootEnable) {
    _beginSPI(WRITEENABLE);
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
    if (!(_readStat1() & WRTEN)) {
      if (_troubleshootEnable) {
        _troubleshoot(CANTENWRITE);
@@ -304,7 +309,8 @@
  // Erase Security Register and Program Security register
  bool SPIFram::_writeDisable(void) {
  	_beginSPI(WRITEDISABLE);
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
  	return true;
 }
 
@@ -316,7 +322,8 @@
    } while (_chip.manufacturerID == 0x7F);    // 0x7F is a continuation code according to JEDEC. So, the code loops till a manufacturer ID is read.
  	_chip.devID1 = _nextByte(READ);		// memory type
  	_chip.devID2 = _nextByte(READ);		// capacity
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
    if (_chip.manufacturerID == 0x00) {
      _troubleshoot(NORESPONSE);
      return false;

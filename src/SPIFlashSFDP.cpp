@@ -40,7 +40,7 @@ bool SPIFlash::_getSFDPTable(uint32_t _address, uint8_t *data_buffer, uint8_t nu
   _nextByte(WRITE, Lo(_address));
   _nextByte(WRITE, DUMMYBYTE);
   _nextBuf(READDATA, &(*data_buffer), numberOfDWords*4); //*4 to convert from dWords to bytes
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
   return true;
 }
 
@@ -55,7 +55,7 @@ bool SPIFlash::_getSFDPData(uint32_t _address, uint8_t *data_buffer, uint8_t num
   _nextByte(WRITE, Lo(_address));
   _nextByte(WRITE, DUMMYBYTE);
   _nextBuf(READDATA, &(*data_buffer), numberOfBytes); //*4 to convert from dWords to bytes
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
   return true;
 }
 

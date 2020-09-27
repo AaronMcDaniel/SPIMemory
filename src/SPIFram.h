@@ -34,11 +34,11 @@ public:
   //------------------------------------ Constructor ------------------------------------//
   //New Constructor to Accept the PinNames as a Chip select Parameter - @boseji <salearj@hotmail.com> 02.03.17
   #if defined (ARDUINO_ARCH_SAMD) || defined(ARCH_STM32)
-  SPIFram(uint8_t cs = CS, SPIClass *spiinterface=&SPI);
+  SPIFram(/*uint8_t cs = CS,*/ SPIClass *spiinterface=&SPI);
   #elif defined (BOARD_RTL8195A)
-  SPIFram(PinName cs = CS);
+  //SPIFram(PinName cs = CS);
   #else
-  SPIFram(uint8_t cs = CS);
+  //SPIFram(uint8_t cs = CS);
   #endif
   //----------------------------- Initial / Chip Functions ------------------------------//
   bool     begin(uint32_t flashChipSize = 0);
@@ -49,7 +49,7 @@ public:
   uint32_t getJEDECID(void);
   uint64_t getUniqueID(void);
   uint32_t getAddress(uint16_t size);
-  uint16_t sizeofStr(String &inputStr);
+  //uint16_t sizeofStr(String &inputStr);// this should use ardiuno types
   uint32_t getCapacity(void);
   float    functionRunTime(void);
   //-------------------------------- Write / Read Bytes ---------------------------------//
@@ -80,8 +80,8 @@ public:
   bool     writeFloat(uint32_t _addr, float data, bool errorCheck = true);
   float    readFloat(uint32_t _addr, bool fastRead = false);
   //-------------------------------- Write / Read Strings -------------------------------//
-  bool     writeStr(uint32_t _addr, String &data, bool errorCheck = true);
-  bool     readStr(uint32_t _addr, String &data, bool fastRead = false);
+  //bool     writeStr(uint32_t _addr, String &data, bool errorCheck = true); // this should not have arduino types
+  //bool     readStr(uint32_t _addr, String &data, bool fastRead = false); // this should not have arduino types
   //------------------------------- Write / Read Anything -------------------------------//
 
   template <class T> bool writeAnything(uint32_t _addr, const T& data, bool errorCheck = true);
@@ -129,9 +129,9 @@ private:
     SPISettings _settings;
   #endif
   //If multiple SPI ports are available this variable is used to choose between them (SPI, SPI1, SPI2 etc.)
-  SPIClass *_spi;
+  //ATmega::MoteinoOTAComponentBase  *_spi;
   #if !defined (BOARD_RTL8195A)
-  uint8_t     csPin;
+  //uint8_t     csPin;// this should not be writing to pins
   #else
   // Object declaration for the GPIO HAL type for csPin - @boseji <salearj@hotmail.com> 02.03.17
   gpio_t      csPin;
@@ -207,7 +207,7 @@ template <class T> bool SPIFram::_writeErrorCheck(uint32_t _addr, const T& value
     }
   }
   else {*/
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, READDATA);
     _transferAddress();
     for (uint16_t i = 0; i < _sz; i++) {
@@ -253,7 +253,7 @@ template <class T> bool SPIFram::_write(uint32_t _addr, const T& value, uint32_t
   if (!SPIBusState) {
     _startSPIBus();
   }
-  CHIP_SELECT
+  //CHIP_SELECT// this should not be writing to pins
   _nextByte(WRITE, PAGEPROG);
   _transferAddress();
 
@@ -261,7 +261,7 @@ template <class T> bool SPIFram::_write(uint32_t _addr, const T& value, uint32_t
     for (uint16_t i = 0; i < length; ++i) {
       _nextByte(WRITE, *p++);
     }
-    CHIP_DESELECT
+    //CHIP_DESELECT// this should not be writing to pins
   }
   else {
     uint32_t writeBufSz;
@@ -273,7 +273,7 @@ template <class T> bool SPIFram::_write(uint32_t _addr, const T& value, uint32_t
       for (uint16_t i = 0; i < writeBufSz; ++i) {
         _nextByte(WRITE, *p++);
       }
-      CHIP_DESELECT
+      //CHIP_DESELECT// this should not be writing to pins
       if (!_addressOverflow) {
         _currentAddress += writeBufSz;
       }
@@ -334,7 +334,7 @@ template <class T> bool SPIFram::_read(uint32_t _addr, T& value, uint32_t _sz, b
       }
     }
     else {
-      CHIP_SELECT
+      //CHIP_SELECT// this should not be writing to pins
       if (fastRead) {
         _nextByte(WRITE, FASTREAD);
       }

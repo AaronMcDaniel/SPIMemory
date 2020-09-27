@@ -25,8 +25,8 @@
 
  // Defines and variables specific to SAM architecture
  #if defined (ARDUINO_ARCH_SAM)
-   #define CHIP_SELECT   digitalWrite(csPin, LOW);
-   #define CHIP_DESELECT digitalWrite(csPin, HIGH);
+   //#define CHIP_SELECT   digitalWrite(csPin, LOW); // this should not be writing to pins
+   //#define CHIP_DESELECT digitalWrite(csPin, HIGH); // this should not be writing to pins
    #define xfer   due.SPITransfer
    #define BEGIN_SPI due.SPIBegin();
    extern char _end;
@@ -38,22 +38,22 @@
  #elif defined (BOARD_RTL8195A)
    #define CHIP_SELECT   gpio_write(&csPin, 0);
    #define CHIP_DESELECT gpio_write(&csPin, 1);
-   #define xfer(n)   SPI.transfer(n)
+   #define xfer(n)   SPIMem.FprimeTransfer(n)
    #define BEGIN_SPI SPI.begin();
 
  // Defines and variables specific to SAMD architecture
  #elif defined (ARDUINO_ARCH_SAMD) || defined(ARCH_STM32)|| defined(ARDUINO_ARCH_ESP32)
-   #define CHIP_SELECT   digitalWrite(csPin, LOW);
-   #define CHIP_DESELECT digitalWrite(csPin, HIGH);
+   //#define CHIP_SELECT   digitalWrite(csPin, LOW);// this should not be writing to pins
+   //#define CHIP_DESELECT digitalWrite(csPin, HIGH);// this should not be writing to pins
    #define xfer(n)   _spi->transfer(n)
    #define BEGIN_SPI _spi->begin();
 
  // Defines and variables not specific to any architecture
  #else
-   #define CHIP_SELECT   digitalWrite(csPin, LOW);
-   #define CHIP_DESELECT digitalWrite(csPin, HIGH);
-   #define xfer(n)   SPI.transfer(n)
-   #define BEGIN_SPI SPI.begin();
+   //#define CHIP_SELECT   digitalWrite(csPin, LOW);// this should not be writing to pins
+   //#define CHIP_DESELECT digitalWrite(csPin, HIGH);// this should not be writing to pins
+   #define xfer(n)   SPIMem.FprimeTransfer(n)
+   //#define BEGIN_SPI SPI.begin();
  #endif
 
  #ifdef RUNDIAGNOSTIC
@@ -214,7 +214,7 @@
 #define BUSY_TIMEOUT  1000000000L
 #define arrayLen(x)   (sizeof(x) / sizeof(*x))
 #define lengthOf(x)   (sizeof(x))/sizeof(byte)
-#define BYTE          1L
+//#define BYTE          1L
 #define KiB           1024L
 #define MiB           KiB * KiB
 #define S             1000L
@@ -235,7 +235,7 @@
 #elif defined (BOARD_RTL8195A)
 #define CS PC_4
 #else
-#define CS SS
+//#define CS SS // this should not be writing to pins
 #endif
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//

@@ -24,7 +24,8 @@
  * <http://www.gnu.org/licenses/>.
  */
 
- #include "SPIFlash.h"
+#include "SPIFlash.h"
+#include <ATmega/MoteinoOTA/MoteinoOTAComponentImpl.hpp>
 
  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
  //     Private functions used by read, write and erase operations     //
@@ -83,12 +84,12 @@
    _beginSPI(READDATA);
    for (uint32_t i = 0; i < size; i++) {
      if (_nextByte(READ) != 0xFF) {
-       CHIP_DESELECT;
+       //CHIP_DESELECT;// this should not be writing to pins
        _troubleshoot(PREVWRITTEN);
        return false;
      }
    }
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
    return true;
  }
 
@@ -149,7 +150,7 @@
 
  bool SPIFlash::_startSPIBus(void) {
    #ifndef SPI_HAS_TRANSACTION
-       noInterrupts();
+       //noInterrupts();// this should not be handling interrupts
    #endif
 
    #if defined (ARDUINO_ARCH_SAM)
@@ -172,11 +173,11 @@
        _SPSR = SPSR;
      #endif
      #ifdef SPI_HAS_TRANSACTION
-       SPI.beginTransaction(_settings);
+       SSPI.beginTransaction(_settings);
      #else
-       SPI.setClockDivider(_clockdiv);
+       /*SPI.setClockDivider(_clockdiv); // assume driver uses these settings
        SPI.setDataMode(SPI_MODE0);
-       SPI.setBitOrder(MSBFIRST);
+       SPI.setBitOrder(MSBFIRST);*/
      #endif
    #endif
    SPIBusState = true;
@@ -188,7 +189,7 @@
    if (!SPIBusState) {
      _startSPIBus();
    }
-   CHIP_SELECT
+   //CHIP_SELECT// this should not be writing to pins
    switch (opcode) {
      case READDATA:
      _nextByte(WRITE, opcode);
@@ -253,7 +254,7 @@
  #if defined (ARDUINO_ARCH_SAMD)
    return _spi->transfer16(data);
  #else
-   return SPI.transfer16(data);
+   return SPIMem.FprimeTransfer16(data);
  #endif
  }
 
@@ -274,7 +275,7 @@
          _spi->transfer(&data_buffer[0], size);
        #endif
      #elif defined (ARDUINO_ARCH_AVR)
-       SPI.transfer(&(*data_buffer), size);
+       SPIMem.FprimeTransfer(&(*data_buffer), size);
      #else
        for (uint16_t i = 0; i < size; i++) {
          *_dataAddr = xfer(NULLBYTE);
@@ -293,7 +294,7 @@
          _spi->transfer(&data_buffer[0], size);
        #endif
      #elif defined (ARDUINO_ARCH_AVR)
-       SPI.transfer(&(*data_buffer), size);
+       SPIMem.FprimeTransfer(&(*data_buffer), size);
      #else
        for (uint16_t i = 0; i < size; i++) {
          xfer(*_dataAddr);
@@ -306,7 +307,7 @@
 
  //Stops all operations. Should be called after all the required data is read/written from repeated _nextByte() calls
  void SPIFlash::_endSPI(void) {
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
 
    if (address4ByteEnabled) {          // If the previous operation enabled 4-byte addressing, disable it
      _disable4ByteAddressing();
@@ -319,7 +320,7 @@
      SPI.endTransaction();
    #endif
  #else
-   interrupts();
+   //interrupts();// this should not be handling interrupts
  #endif
  #if defined (ARDUINO_ARCH_AVR)
    SPCR = _SPCR;
@@ -332,7 +333,7 @@
  uint8_t SPIFlash::_readStat1(void) {
    _beginSPI(READSTAT1);
    stat1 = _nextByte(READ);
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
    return stat1;
  }
 
@@ -341,7 +342,7 @@
    _beginSPI(READSTAT2);
    stat2 = _nextByte(READ);
    //stat2 = _nextByte(READ);
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
    return stat2;
  }
 
@@ -350,7 +351,7 @@
    _beginSPI(READSTAT3);
    stat3 = _nextByte(READ);
    //stat2 = _nextByte(READ);
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
    return stat3;
  }
 
@@ -360,7 +361,7 @@
      return true;
    }
    _beginSPI(ADDR4BYTE_EN);
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
    if (_readStat3() & ADS) {
      address4ByteEnabled = true;
      return true;
@@ -377,7 +378,7 @@
      return true;
    }
    _beginSPI(ADDR4BYTE_DIS);
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
    if (_readStat3() & ADS) {
      _troubleshoot(UNABLETO3BYTE);
      return false;
@@ -441,7 +442,7 @@
  //Enables writing to chip by setting the WRITEENABLE bit
  bool SPIFlash::_writeEnable(bool _troubleshootEnable) {
    _beginSPI(WRITEENABLE);
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
    if (!(_readStat1() & WRTEN)) {
      if (_troubleshootEnable) {
        _troubleshoot(CANTENWRITE);
@@ -458,7 +459,7 @@
  // Erase Security Register and Program Security register
  bool SPIFlash::_writeDisable(void) {
  	_beginSPI(WRITEDISABLE);
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
  	return true;
  }
 
@@ -473,7 +474,7 @@
    _nextByte(READ);
    *b1 = _nextByte(READ);
    *b2 = _nextByte(READ);
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
    return true;
  }
 
@@ -486,7 +487,7 @@
  	_chip.manufacturerID = _nextByte(READ);		// manufacturer id
  	_chip.memoryTypeID = _nextByte(READ);		// memory type
  	_chip.capacityID = _nextByte(READ);		// capacity
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
    if (!_chip.manufacturerID) {
      _troubleshoot(NORESPONSE);
      return false;
@@ -501,10 +502,10 @@
      _readStat1();
      uint8_t _tempStat1 = stat1 & 0xC3;
      _beginSPI(WRITESTATEN);
-     CHIP_DESELECT
+     //CHIP_DESELECT// this should not be writing to pins
      _beginSPI(WRITESTAT1);
      _nextByte(WRITE, _tempStat1);
-     CHIP_DESELECT
+     //CHIP_DESELECT// this should not be writing to pins
    }
    else if (_chip.memoryTypeID == SST26) {
      if(!_notBusy()) {
@@ -513,7 +514,7 @@
      _writeEnable();
      _delay_us(10);
      _beginSPI(ULBPR);
-     CHIP_DESELECT
+     //CHIP_DESELECT// this should not be writing to pins
      _delay_us(50);
      _writeDisable();
    }

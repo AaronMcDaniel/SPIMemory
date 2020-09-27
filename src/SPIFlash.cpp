@@ -29,13 +29,13 @@
 // Constructor
 // Adding Low level HAL API to initialize the Chip select pinMode on RTL8195A - @boseji <salearj@hotmail.com> 2nd March 2017
 #if defined (ARDUINO_ARCH_AVR)
-SPIFlash::SPIFlash(uint8_t cs) {
+/*SPIFlash::SPIFlash(uint8_t cs) {
   _SPIInUse = STDSPI;
   csPin = cs;
   cs_mask = digitalPinToBitMask(csPin);
   pinMode(csPin, OUTPUT);
-  CHIP_DESELECT
-}
+  //CHIP_DESELECT// this should not be writing to pins
+}*/// this should not be writing to pins
 #elif defined (ARDUINO_ARCH_SAMD) || defined (ARCH_STM32) || defined(ARDUINO_ARCH_ESP32)
 SPIFlash::SPIFlash(uint8_t cs, SPIClass *spiinterface) {
   _spi = spiinterface;  //Sets SPI interface - if no user selection is made, this defaults to SPI
@@ -47,7 +47,8 @@ SPIFlash::SPIFlash(uint8_t cs, SPIClass *spiinterface) {
   }
   csPin = cs;
   pinMode(csPin, OUTPUT);
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 }
 
 #elif defined (BOARD_RTL8195A)
@@ -57,13 +58,14 @@ SPIFlash::SPIFlash(PinName cs) {
   gpio_dir(&csPin, PIN_OUTPUT);
   gpio_mode(&csPin, PullNone);
   gpio_write(&csPin, 1);
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 }
 
 #else
 //#elif defined (ALTSPI)
 //If board has multiple SPI interfaces, this overloaded constructor lets the user choose between them. Currently only works with ESP32
-SPIFlash::SPIFlash(int8_t *SPIPinsArray) {
+/*SPIFlash::SPIFlash(int8_t *SPIPinsArray) {
   _nonStdSPI.sck = SPIPinsArray[0];
   _nonStdSPI.miso = SPIPinsArray[1];
   _nonStdSPI.mosi = SPIPinsArray[2];
@@ -85,15 +87,24 @@ SPIFlash::SPIFlash(int8_t *SPIPinsArray) {
   }
 
   pinMode(csPin, OUTPUT);
-  CHIP_DESELECT
-}
+  //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
+}*///this should not be writing to pins
 
 //#else
-SPIFlash::SPIFlash(uint8_t cs) {
+/*SPIFlash::SPIFlash(uint8_t cs) {
   _SPIInUse = STDSPI;
   csPin = cs;
   pinMode(csPin, OUTPUT);
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
+}*/// this should not be writing to pins
+int b = 0;
+void SPIFlash::SetFPrimeSPIInterface(uint8_t (*FprimeTransfer_U8)(uint8_t), uint16_t (*FprimeTransfer_U16)(uint16_t), void (*FprimeTransfer_Buffer)(uint8_t*, uint32_t))
+{
+  int a = 0;
+  SPIMem.FprimeTransfer_U8 = FprimeTransfer_U8;
+  SPIMem.FprimeTransfer_U16 = FprimeTransfer_U16;
+  SPIMem.FprimeTransfer_Buffer = FprimeTransfer_Buffer;
 }
 
 #endif
@@ -118,7 +129,7 @@ bool SPIFlash::begin(uint32_t flashChipSize) {
     #endif
   }
   else {
-    BEGIN_SPI
+    //BEGIN_SPI
   }
 
 #ifdef SPI_HAS_TRANSACTION
@@ -127,9 +138,9 @@ bool SPIFlash::begin(uint32_t flashChipSize) {
     _settings = SPISettings(SPI_CLK, MSBFIRST, SPI_MODE0);
   }
 #else
-  if (!_clockdiv) {
+  /*if (!_clockdiv) {
     _clockdiv = SPI_CLOCK_DIV2;
-  }
+  }*/// this should not have access to pins, including the clock
 #endif
   bool retVal = _chipID(flashChipSize);
   _endSPI();
@@ -147,7 +158,7 @@ void SPIFlash::setClock(uint32_t clockSpeed) {
 }
 #else
 void SPIFlash::setClock(uint8_t clockdiv) {
-  _clockdiv = clockdiv;
+  //_clockdiv = clockdiv;
 }
 #endif
 
@@ -228,7 +239,8 @@ uint64_t SPIFlash::getUniqueID(void) {
    for (uint8_t i = 0; i < 8; i++) {
      _uniqueID[i] = _nextByte(READ);
    }
-   CHIP_DESELECT
+   //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
    long long _uid = 0;
    for (uint8_t i = 0; i < 8; i++) {
@@ -267,13 +279,13 @@ uint32_t SPIFlash::getAddress(uint16_t size) {
 }
 
 //Function for returning the size of the string (only to be used for the getAddress() function)
-uint16_t SPIFlash::sizeofStr(String &inputStr) {
+/*uint16_t SPIFlash::sizeofStr(String &inputStr) {
   uint16_t size;
   size = (sizeof(char)*(inputStr.length()+1));
   size+=sizeof(inputStr.length()+1);
 
 	return size;
-}
+}*///should not have access to Arduino types
 
 // Reads a byte of data from a specific location in a page.
 //  Takes two arguments -
@@ -405,7 +417,7 @@ float SPIFlash::readFloat(uint32_t _addr, bool fastRead) {
 //    1. _addr --> Any address from 0 to capacity
 //    2. outputString --> String variable to write the output to
 //    3. fastRead --> defaults to false - executes _beginFastRead() if set to true
-bool SPIFlash::readStr(uint32_t _addr, String &data, bool fastRead) {
+/*bool SPIFlash::readStr(uint32_t _addr, String &data, bool fastRead) {
   //return _read(_addr, data, sizeof(data), fastRead, _STRING_);
   #ifdef RUNDIAGNOSTIC
     _spifuncruntime = micros();
@@ -449,7 +461,7 @@ bool SPIFlash::readStr(uint32_t _addr, String &data, bool fastRead) {
     _spifuncruntime = micros() - _spifuncruntime;
   #endif
 	return true;
-}
+}*/// should not have access to arduino types
 
 // Writes a byte of data to a specific location in a page.
 //  Takes three arguments -
@@ -469,7 +481,8 @@ bool SPIFlash::writeByte(uint32_t _addr, uint8_t data, bool errorCheck) {
 
   _beginSPI(PAGEPROG);
   _nextByte(WRITE, data);
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
   if (!errorCheck) {
     _endSPI();
@@ -483,7 +496,7 @@ bool SPIFlash::writeByte(uint32_t _addr, uint8_t data, bool errorCheck) {
       return false;
     }
     _currentAddress = _addr;
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, READDATA);
     _transferAddress();
     if (data != _nextByte(READ)) {
@@ -522,7 +535,8 @@ bool SPIFlash::writeChar(uint32_t _addr, int8_t data, bool errorCheck) {
 
   _beginSPI(PAGEPROG);
   _nextByte(WRITE, data);
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
   if (!errorCheck) {
     _endSPI();
@@ -536,7 +550,7 @@ bool SPIFlash::writeChar(uint32_t _addr, int8_t data, bool errorCheck) {
       return false;
     }
     _currentAddress = _addr;
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, READDATA);
     _transferAddress();
     if (data != (int8_t)_nextByte(READ)) {
@@ -565,7 +579,7 @@ bool SPIFlash::writeChar(uint32_t _addr, int8_t data, bool errorCheck) {
 //    4. errorCheck --> Turned on by default. Checks for writing errors
 // WARNING: You can only write to previously erased memory locations (see datasheet).
 // Use the eraseSector()/eraseBlock32K/eraseBlock64K commands to first clear memory (write 0xFFs)
-bool SPIFlash::writeByteArray(uint32_t _addr, uint8_t *data_buffer, size_t bufferSize, bool errorCheck) {
+bool SPIFlash::writeByteArray(uint32_t _addr, uint8_t *data_buffer, size_t bufferSize, bool errorCheck=true) {
   #ifdef RUNDIAGNOSTIC
     _spifuncruntime = micros();
   #endif
@@ -575,14 +589,15 @@ bool SPIFlash::writeByteArray(uint32_t _addr, uint8_t *data_buffer, size_t buffe
   uint16_t maxBytes = SPI_PAGESIZE-(_addr % SPI_PAGESIZE);  // Force the first set of bytes to stay within the first page
 
   if (bufferSize <= maxBytes) {
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, PAGEPROG);
     _transferAddress();
     //_nextBuf(PAGEPROG, &data_buffer[0], bufferSize);
     for (uint16_t i = 0; i < bufferSize; ++i) {
       _nextByte(WRITE, data_buffer[i]);
     }
-    CHIP_DESELECT
+    //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
   }
   else {
     uint16_t length = bufferSize;
@@ -592,14 +607,15 @@ bool SPIFlash::writeByteArray(uint32_t _addr, uint8_t *data_buffer, size_t buffe
     do {
       writeBufSz = (length<=maxBytes) ? length : maxBytes;
 
-      CHIP_SELECT
+      //CHIP_SELECT// this should not be writing to pins
       _nextByte(WRITE, PAGEPROG);
       _transferAddress();
       //_nextBuf(PAGEPROG, &data_buffer[data_offset], writeBufSz);
       for (uint16_t i = 0; i < writeBufSz; ++i) {
         _nextByte(WRITE, data_buffer[data_offset + i]);
       }
-      CHIP_DESELECT
+      //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
       _currentAddress += writeBufSz;
       data_offset += writeBufSz;
@@ -625,7 +641,7 @@ bool SPIFlash::writeByteArray(uint32_t _addr, uint8_t *data_buffer, size_t buffe
       return false;
     }
     _currentAddress = _addr;
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, READDATA);
     _transferAddress();
     for (uint16_t j = 0; j < bufferSize; j++) {
@@ -659,14 +675,15 @@ bool SPIFlash::writeCharArray(uint32_t _addr, char *data_buffer, size_t bufferSi
   uint16_t maxBytes = SPI_PAGESIZE-(_addr % SPI_PAGESIZE);  // Force the first set of bytes to stay within the first page
 
   if (bufferSize <= maxBytes) {
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, PAGEPROG);
     _transferAddress();
     //_nextBuf(PAGEPROG, &data_buffer[0], bufferSize);
     for (uint16_t i = 0; i < bufferSize; ++i) {
       _nextByte(WRITE, data_buffer[i]);
     }
-    CHIP_DESELECT
+    //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
   }
   else {
     uint16_t length = bufferSize;
@@ -676,13 +693,14 @@ bool SPIFlash::writeCharArray(uint32_t _addr, char *data_buffer, size_t bufferSi
     do {
       writeBufSz = (length<=maxBytes) ? length : maxBytes;
 
-      CHIP_SELECT
+      //CHIP_SELECT// this should not be writing to pins
       _nextByte(WRITE, PAGEPROG);
       _transferAddress();
       for (uint16_t i = 0; i < writeBufSz; ++i) {
         _nextByte(WRITE, data_buffer[data_offset + i]);
       }
-      CHIP_DESELECT
+      //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
       _currentAddress += writeBufSz;
       data_offset += writeBufSz;
@@ -708,7 +726,7 @@ bool SPIFlash::writeCharArray(uint32_t _addr, char *data_buffer, size_t bufferSi
       return false;
     }
     _currentAddress = _addr;
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, READDATA);
     _transferAddress();
     for (uint16_t j = 0; j < bufferSize; j++) {
@@ -744,7 +762,8 @@ bool SPIFlash::writeWord(uint32_t _addr, uint16_t data, bool errorCheck) {
   for (uint8_t i = 0; i < sizeof(data); i++) {
     _nextByte(WRITE, data >> (8*i));
   }
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
   if (!errorCheck) {
     _endSPI();
@@ -762,7 +781,7 @@ bool SPIFlash::writeWord(uint32_t _addr, uint16_t data, bool errorCheck) {
       uint16_t word;
     } dataIn;
     _currentAddress = _addr;
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, READDATA);
     _transferAddress();
     for (uint8_t i = 0; i < sizeof(data); i++) {
@@ -802,7 +821,8 @@ bool SPIFlash::writeShort(uint32_t _addr, int16_t data, bool errorCheck) {
   for (uint8_t i = 0; i < sizeof(data); i++) {
     _nextByte(WRITE, data >> (8*i));
   }
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
   if (!errorCheck) {
     _endSPI();
@@ -820,7 +840,7 @@ bool SPIFlash::writeShort(uint32_t _addr, int16_t data, bool errorCheck) {
       int16_t short_;
     } dataIn;
     _currentAddress = _addr;
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, READDATA);
     _transferAddress();
     for (uint8_t i = 0; i < sizeof(data); i++) {
@@ -860,7 +880,8 @@ bool SPIFlash::writeULong(uint32_t _addr, uint32_t data, bool errorCheck) {
   for (uint8_t i = 0; i < sizeof(data); i++) {
     _nextByte(WRITE, data >> (8*i));
   }
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
   if (!errorCheck) {
     _endSPI();
@@ -878,7 +899,7 @@ bool SPIFlash::writeULong(uint32_t _addr, uint32_t data, bool errorCheck) {
       uint32_t uLong;
     } dataIn;
     _currentAddress = _addr;
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, READDATA);
     _transferAddress();
     for (uint8_t i = 0; i < sizeof(data); i++) {
@@ -918,7 +939,8 @@ bool SPIFlash::writeLong(uint32_t _addr, int32_t data, bool errorCheck) {
   for (uint8_t i = 0; i < sizeof(data); i++) {
     _nextByte(WRITE, data >> (8*i));
   }
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
   if (!errorCheck) {
     _endSPI();
@@ -936,7 +958,7 @@ bool SPIFlash::writeLong(uint32_t _addr, int32_t data, bool errorCheck) {
       int32_t Long;
     } dataIn;
     _currentAddress = _addr;
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, READDATA);
     _transferAddress();
     for (uint8_t i = 0; i < sizeof(data); i++) {
@@ -982,7 +1004,8 @@ bool SPIFlash::writeFloat(uint32_t _addr, float data, bool errorCheck) {
   for (uint8_t i = 0; i < sizeof(data); i++) {
     _nextByte(WRITE, dataOut.byte[i]);
   }
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
   if (!errorCheck) {
     _endSPI();
@@ -1000,7 +1023,7 @@ bool SPIFlash::writeFloat(uint32_t _addr, float data, bool errorCheck) {
       float Float;
     } dataIn;
     _currentAddress = _addr;
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, READDATA);
     _transferAddress();
     for (uint8_t i = 0; i < sizeof(data); i++) {
@@ -1027,7 +1050,7 @@ bool SPIFlash::writeFloat(uint32_t _addr, float data, bool errorCheck) {
 //    3. errorCheck --> Turned on by default. Checks for writing errors
 // WARNING: You can only write to previously erased memory locations (see datasheet).
 // Use the eraseSector()/eraseBlock32K/eraseBlock64K commands to first clear memory (write 0xFFs)
-bool SPIFlash::writeStr(uint32_t _addr, String &data, bool errorCheck) {
+/*bool SPIFlash::writeStr(uint32_t _addr, String &data, bool errorCheck){
 
   #ifdef RUNDIAGNOSTIC
   _spifuncruntime = micros();
@@ -1046,7 +1069,8 @@ bool SPIFlash::writeStr(uint32_t _addr, String &data, bool errorCheck) {
   for (uint8_t i = 0; i < sizeof(_sz); i++) {
     _nextByte(WRITE, _sz >> (8*i));
   }
-  CHIP_DESELECT
+  //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
   _endSPI();
 
   if(!_addressCheck(_addr+sizeof(_sz), _sz) || !_notBusy() || !_writeEnable()) {
@@ -1054,15 +1078,16 @@ bool SPIFlash::writeStr(uint32_t _addr, String &data, bool errorCheck) {
   }
   uint16_t maxBytes = SPI_PAGESIZE-(_addr % SPI_PAGESIZE);  // Force the first set of bytes to stay within the first page
 
-  if (_sz <= maxBytes) {
-    CHIP_SELECT
+  if(_sz <= maxBytes) {
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, PAGEPROG);
     _transferAddress();
     //_nextBuf(PAGEPROG, &_outCharArray[0], _sz);
     for (uint16_t i = 0; i < _sz; ++i) {
       _nextByte(WRITE, _outCharArray[i]);
     }
-    CHIP_DESELECT
+    //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
   }
   else {
     uint16_t length = _sz;
@@ -1072,13 +1097,14 @@ bool SPIFlash::writeStr(uint32_t _addr, String &data, bool errorCheck) {
     do {
       writeBufSz = (length<=maxBytes) ? length : maxBytes;
 
-      CHIP_SELECT
+      //CHIP_SELECT// this should not be writing to pins
       _nextByte(WRITE, PAGEPROG);
       _transferAddress();
       for (uint16_t i = 0; i < writeBufSz; ++i) {
         _nextByte(WRITE, _outCharArray[data_offset + i]);
       }
-      CHIP_DESELECT
+      //CHIP_DESELECT// this should not be writing to pins
+//CHIP_DESELECT// this should not be writing to pins
 
       _currentAddress += writeBufSz;
       data_offset += writeBufSz;
@@ -1106,7 +1132,7 @@ bool SPIFlash::writeStr(uint32_t _addr, String &data, bool errorCheck) {
     _currentAddress = (_addr + sizeof(_sz));
     char _inCharArray[_sz];
 
-    CHIP_SELECT
+    //CHIP_SELECT// this should not be writing to pins
     _nextByte(WRITE, READDATA);
     _transferAddress();
     for (uint8_t i = 0; i < _sz; i++) {
@@ -1127,7 +1153,7 @@ bool SPIFlash::writeStr(uint32_t _addr, String &data, bool errorCheck) {
     #endif
   }
   return true;
-}
+}*/// should not have access to arduino types
 
 
 

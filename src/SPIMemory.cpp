@@ -25,5 +25,19 @@
  */
 
 #include "SPIMemory.h"
+uint8_t SPIMemory::FprimeTransfer(uint8_t Val)
+{
+  return this->FprimeTransfer_U8(Val);
+}
+
+uint16_t SPIMemory::FprimeTransfer16(uint16_t Val16)
+{
+  return this->FprimeTransfer_U16(Val16);
+}
+
+void SPIMemory::FprimeTransfer(uint8_t *Buffer, uint32_t Size)
+{
+  this->FprimeTransfer_Buffer(Buffer, Size);
+}
 
 SPIMemory SPIMemory; // default instantiation of SPIMemory object

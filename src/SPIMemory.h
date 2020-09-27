@@ -69,8 +69,8 @@
 //#define ZERO_SPISERCOM SERCOM4                                      //
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-  #include <Arduino.h>
-  #include <SPI.h>
+  #include <Arduino.h> // TODO: Replace this dependancy with FPrime references
+  //#include <SPI.h>
   #include "defines.h"
   #include "SPIFlash.h"
   #include "SPIFram.h"
@@ -125,14 +125,27 @@
 class SPIMemory {
 public:
   //------------------------------------ Constructor ------------------------------------//
-  SPIMemory(void) {};
-  ~SPIMemory(void) {};
+  SPIMemory() {};
+  ~SPIMemory(void) {};//rflow enabled by d
   //------------------------------- Public functions -----------------------------------//
+  uint8_t FprimeTransfer(uint8_t Val); // replace the SPI.transfer method
+  uint16_t FprimeTransfer16(uint16_t Val16); // replace the SPI.transfer16 method
+  void FprimeTransfer(uint8_t* Buffer, uint32_t Size); // replace the SPI.transfer method
   //------------------------------- Public variables -----------------------------------//
+  // This is a function pointer for transfering a single byte over SPI
+  uint8_t (* FprimeTransfer_U8)(uint8_t);
+  // this is a function pointer for transferring a short over SPI (LSB first)
+  uint16_t (* FprimeTransfer_U16)(uint16_t);
+  // this is a function pointer for transferring a buffer of the given size over SPI
+  void (* FprimeTransfer_Buffer)(uint8_t*, uint32_t);
+  //ATmega::MoteinoOTAComponentBase
+  //
+  // line at top of file reads:   #include <ATmega/MoteinoOTA/MoteinoOTAComponentImpl.hpp>
+  //
 
 
 };
 
-extern SPIMemory SPIMem; //default SPIMemory instance;
+static SPIMemory SPIMem; //default SPIMemory instance;
 
 #endif // _SPIMEMORY_H_
